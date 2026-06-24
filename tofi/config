@@ -1,0 +1,19 @@
+font = "/usr/share/fonts/ttf/ttf-ioskeley-mono-unhinted/IoskeleyMono-Medium.ttf"
+hint-font = false
+ascii-input = false
+
+width = 100%
+height = 100%
+border-width = 0
+outline-width = 0
+padding-left = 30%
+padding-top = 30%
+result-spacing = 20
+hide-cursor = true
+num-results =5
+
+background-color = #1a1b26f6
+prompt-color = #c0caf5
+input-color = #c0caf5
+selection-color = #c0caf5
+default-result-color = #565f89

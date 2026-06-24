@@ -1,0 +1,123 @@
+// -*- mode: jsonc -*-
+{
+    "height": 36,
+    "spacing": 10,
+    "modules-left": [
+        "sway/workspaces",
+        "sway/mode",
+        "sway/scratchpad",
+        "custom/media"
+    ],
+    "modules-center": [
+        "sway/window"
+    ],
+    "modules-right": [
+        // "tray",
+        //"mpd",
+        "idle_inhibitor",
+        "network",
+        "wireplumber#sink",
+        "wireplumber#source",
+        //"power-profiles-daemon",
+        //"cpu",
+        //"memory",
+        //"temperature",
+        "backlight",
+        "custom/razer",
+        "battery",
+        //"keyboard-state",
+        "sway/language",
+        "clock"
+    ],
+    // Modules configuration
+    "custom/media": {
+        "format": "{}",
+        "escape": true,
+        "return-type": "json",
+        "max-length": 30,
+        "on-click": "playerctl play-pause",
+        "on-click-right": "playerctl stop",
+        // "smooth-scrolling-threshold": 10, // This value was tested using a trackpad, it should be lowered if using a mouse.
+        // "on-scroll-up": "playerctl next",
+        // "on-scroll-down": "playerctl previous",
+        "exec": "~/.config/waybar/scripts/mediaplayer.py 2> /dev/null" // Script in resources/custom_modules folder
+    },
+    "sway/window": {
+        "max-length": 75
+    },
+    "sway/language": {
+        "format": "{short} {variant}"
+    },
+    "idle_inhibitor": {
+        "format": "{icon}",
+        "format-icons": {
+            "activated": "󰅶 Caffeine",
+            "deactivated": "󰾪 "
+        }
+    },
+    // "tray": {
+    //   "icon-size": 14,
+    //   "spacing": 8,
+    // },
+    "clock": {
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+        "format-alt": "{:%Y-%m-%d}"
+    },
+    "backlight": {
+        "format": "{icon}{percent}%",
+        "format-icons": [
+            " ",
+            " ",
+            " ",
+            " ",
+            " ",
+            " ",
+            " ",
+            " ",
+            " "
+        ]
+    },
+    "battery": {
+        "states": {
+            // "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon} {capacity}%",
+        "format-full": "{icon} {capacity}%",
+        "format-charging": "󰂄 {capacity}%",
+        "format-plugged": " {capacity}%",
+        "format-alt": "{icon}{time}",
+        // "format-good": "", // An empty format will hide the module
+        // "format-full": "",
+        "format-icons": [
+            "󰂎",
+            "󰁼",
+            "󰁾",
+            "󰂀",
+            "󰁹"
+        ]
+    },
+    "network": {
+        "format-wifi": "󰢾 {signalStrength}%",
+        "format-ethernet": " ",
+        "tooltip-format-wifi": "{essid} — {frequency}GHz",
+        // "tooltip-format-ethernet": "",
+        "format-alt": "󰛳 {ifname}: {ipaddr}",
+        "format-linked": "! {ifname} (No IP)",
+        "format-disconnected": "! Disconnected"
+    },
+    "wireplumber#sink": {
+        "scroll-step": 5,
+        "format": " {volume}%",
+        "format-muted": " ",
+        "on-click": "~/.config/waybar/scripts/audio_changer.py"
+    },
+    "wireplumber#source": {
+        "node-type": "Audio/Source",
+        "scroll-step": 1,
+        "format": " {volume}%",
+        "format-muted": " ",
+        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
+    }
+}
