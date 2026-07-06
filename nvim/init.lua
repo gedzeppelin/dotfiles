@@ -1,4 +1,4 @@
--- Essential options
+-- {{{ Essential options
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
@@ -8,8 +8,9 @@ vim.opt.inccommand = "split"
 vim.opt.scrolloff = 10
 vim.opt.timeoutlen = 300
 vim.opt.updatetime = 250
+-- }}}
 
--- Session
+-- {{{ Session
 vim.opt.sessionoptions = {
 	"buffers",
 	"curdir",
@@ -21,24 +22,15 @@ vim.opt.sessionoptions = {
 	-- "terminal",
 	"winsize",
 }
+-- }}}
 
--- Indentation
+-- {{{ Indentation
 vim.opt.autoindent = true
 vim.opt.expandtab = true
 vim.opt.shiftwidth = 4
 vim.opt.softtabstop = 4
 vim.opt.tabstop = 4
 
--- Basic key mappings
-vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlight" })
-vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" }) -- Exit terminal mode with double Esc
-
--- Custom filetypes
-vim.filetype.add({
-	extension = { tsql = "sql" },
-})
-
--- Auto commands
 -- Overrides for specific filetypes
 vim.api.nvim_create_autocmd("FileType", {
 	group = vim.api.nvim_create_augroup("filetype-indentation", { clear = true }),
@@ -56,14 +48,25 @@ vim.api.nvim_create_autocmd("FileType", {
 		vim.opt_local.tabstop = 2
 	end,
 })
+-- }}}
+
+-- {{{ Basic key mappings
+vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlight" })
+vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" }) -- Exit terminal mode with double Esc
+-- }}}
+
+-- {{{ Custom filetypes
+vim.filetype.add({
+	extension = { tsql = "sql" },
+})
+-- }}}
+
+-- {{{ Auto commands
 -- Enable English spell checking only for markdown and text
 vim.api.nvim_create_autocmd("FileType", {
 	group = vim.api.nvim_create_augroup("spell-checking", { clear = true }),
 	desc = "Enable spell checking for markdown and text files",
-	pattern = {
-		"markdown",
-		"text",
-	},
+	pattern = { "text", "markdown" },
 	callback = function()
 		vim.opt_local.wrap = true
 		vim.opt_local.spell = true
@@ -92,9 +95,14 @@ vim.api.nvim_create_autocmd("PackChanged", {
 				end
 			)
 		end
+		if ev.data.spec.name == "blink.cmp" then
+			require("blink.cmp").build():pwait()
+		end
 	end,
 })
+-- }}}
 
+-- {{{ Plugin management
 vim.pack.add({
 	-- Dependencies
 	"https://github.com/mason-org/mason.nvim",
@@ -102,7 +110,7 @@ vim.pack.add({
 	"https://github.com/nvim-tree/nvim-web-devicons",
 
 	-- Aesthetics
-	"https://github.com/j-hui/fidget.nvim",
+	"https://github.com/folke/tokyonight.nvim",
 
 	-- Treesitter
 	"https://github.com/nvim-treesitter/nvim-treesitter-context",
@@ -110,27 +118,26 @@ vim.pack.add({
 	"https://github.com/romus204/tree-sitter-manager.nvim",
 
 	-- LSP
-	"https://github.com/folke/tokyonight.nvim",
+	"https://github.com/j-hui/fidget.nvim",
 	"https://github.com/neovim/nvim-lspconfig",
-
-	-- Git
-	"https://github.com/NeogitOrg/neogit",
-	"https://github.com/sindrets/diffview.nvim",
-
-	-- AI
-	"https://github.com/folke/sidekick.nvim",
-	{ src = "https://github.com/zbirenbaum/copilot.lua", version = "v2.0.4" },
 
 	-- Telescope
 	"https://github.com/nvim-telescope/telescope-fzf-native.nvim",
 	"https://github.com/nvim-telescope/telescope-ui-select.nvim",
 	"https://github.com/nvim-telescope/telescope.nvim",
 
-	-- Navigation / Formatting / Mini
+	-- Completion
+	"https://github.com/saghen/blink.lib",
+	"https://github.com/saghen/blink.cmp",
+
+	-- Navigation
+	"https://github.com/nvim-tree/nvim-tree.lua",
+	"https://github.com/akinsho/bufferline.nvim",
+
+	-- Search / Mini / Formatting
 	"https://github.com/folke/flash.nvim",
 	"https://github.com/folke/which-key.nvim",
 	"https://github.com/nvim-mini/mini.nvim",
-	"https://github.com/nvim-tree/nvim-tree.lua",
 	"https://github.com/stevearc/conform.nvim",
 
 	-- Debugging
@@ -138,12 +145,22 @@ vim.pack.add({
 	"https://github.com/mfussenegger/nvim-dap",
 	"https://github.com/mfussenegger/nvim-dap-python",
 	"https://github.com/theHamsta/nvim-dap-virtual-text",
+
+	-- AI
+	"https://github.com/folke/sidekick.nvim",
+	"https://github.com/zbirenbaum/copilot.lua",
+
+	-- Git
+	"https://github.com/NeogitOrg/neogit",
+	"https://github.com/sindrets/diffview.nvim",
 })
+-- }}}
 
--- Dependencies
+-- {{{ Setup: Dependencies
 require("mason").setup()
+-- }}}
 
--- Aesthetics
+-- {{{ Setup: Aesthetics
 ---@diagnostic disable-next-line: missing-fields
 require("tokyonight").setup({
 	transparent = true,
@@ -151,6 +168,7 @@ require("tokyonight").setup({
 		all = false,
 		auto = false,
 		-- Actual plugins
+		bufferline = true,
 		copilot = true,
 		dap = true,
 		flash = true,
@@ -182,11 +200,13 @@ vim.api.nvim_set_hl(0, "LspReferenceRead", { bg = "#2e3c64" })
 vim.api.nvim_set_hl(0, "LspReferenceWrite", { bg = "#3b4261", underline = true })
 -- Copilot suggestions should be visible but not distracting, and italic to differentiate from actual code.
 vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#a9b1d6", italic = true })
+-- }}}
 
--- Treesitter
+-- {{{ Setup: Treesitter
 local tsFiletypes = {
 	"bash",
 	"c",
+	"cpp",
 	"dockerfile",
 	"http",
 	"javascript",
@@ -202,12 +222,38 @@ local tsFiletypes = {
 	"yaml",
 }
 
+require("nvim-treesitter-textobjects").setup({
+	select = { lookahead = true },
+})
+
 require("tree-sitter-manager").setup({
 	ensure_installed = vim.tbl_filter(function(ft)
 		return not string.match(ft, "react")
 	end, tsFiletypes),
 	highlight = false,
 })
+
+local select = require("nvim-treesitter-textobjects.select")
+local move = require("nvim-treesitter-textobjects.move")
+
+local function map_text_object(key, query, options)
+	local identifier = query:gsub("@", "")
+	options = options or { move = "outer" }
+
+	vim.keymap.set({ "x", "o" }, "a" .. key, function()
+		select.select_textobject(query .. ".outer", "textobjects")
+	end, { desc = identifier })
+	vim.keymap.set({ "x", "o" }, "i" .. key, function()
+		select.select_textobject(query .. ".inner", "textobjects")
+	end, { desc = identifier })
+
+	vim.keymap.set({ "n", "x", "o" }, "]" .. key, function()
+		move.goto_next_start(query .. options.move, "textobjects")
+	end, { desc = "Jump to next " .. identifier })
+	vim.keymap.set({ "n", "x", "o" }, "[" .. key, function()
+		move.goto_previous_start(query .. options.move, "textobjects")
+	end, { desc = "Jump to previous " .. identifier })
+end
 
 vim.api.nvim_create_autocmd("FileType", {
 	group = vim.api.nvim_create_augroup("treesitter-init", { clear = true }),
@@ -221,8 +267,21 @@ vim.api.nvim_create_autocmd("FileType", {
 		vim.wo[0][0].foldmethod = "expr"
 	end,
 })
+vim.api.nvim_create_autocmd("FileType", {
+	group = vim.api.nvim_create_augroup("treesitter-basic-textobjects", { clear = true }),
+	desc = "Set up basic Treesitter text objects for supported filetypes",
+	pattern = { "javascript", "typescript", "vue", "python" },
+	callback = function()
+		map_text_object("i", "@parameter", { move = "inner" })
+		map_text_object("f", "@function")
+		map_text_object("a", "@assignment")
+		map_text_object("c", "@class")
+		-- map_text_object("b", "@block")
+	end,
+})
+-- }}}
 
--- LSP
+-- {{{ Setup: LSP
 vim.lsp.log.set_level("warn")
 
 vim.lsp.config("*", {
@@ -265,7 +324,13 @@ vim.lsp.config("lua_ls", {
 			path = vim.fn.getcwd()
 		end
 
-		if vim.fs.normalize(path) == vim.fs.normalize(vim.fn.stdpath("config")) then
+		if vim.fn.isdirectory(path) == 1 then
+			path = vim.fs.normalize(path)
+		else
+			return
+		end
+
+		if path == vim.fs.normalize(vim.fn.stdpath("config")) or vim.fn.fnamemodify(path, ":t") == "dotfiles" then
 			client.config.settings.Lua = vim.tbl_deep_extend("force", client.config.settings.Lua, {
 				runtime = {
 					version = "LuaJIT",
@@ -301,13 +366,14 @@ vim.lsp.config("ty", {
 })
 
 vim.lsp.enable({
+	"clangd",
 	"codebook",
+	"jsonls",
 	"lua_ls",
-	"ty",
+	"oxlint",
 	"ruff",
 	"tsgo",
-	"oxlint",
-	"jsonls",
+	"ty",
 })
 
 local lsp_document_highlight_group = vim.api.nvim_create_augroup("lsp-document-highlight", { clear = false })
@@ -385,40 +451,65 @@ vim.api.nvim_create_autocmd("LspDetach", {
 		vim.api.nvim_buf_call(event.buf, vim.lsp.buf.clear_references)
 
 		if #vim.lsp.get_clients({ bufnr = event.buf, method = lsp_document_highlight_method }) == 0 then
-			vim.api.nvim_clear_autocmds({
-				group = lsp_document_highlight_group,
-				buffer = event.buf,
-			})
+			vim.api.nvim_clear_autocmds({ group = lsp_document_highlight_group, buffer = event.buf })
 		end
 	end,
 })
 
 -- Vue LSP setup
 vim.api.nvim_create_user_command("VueStart", function()
-	local vue_language_server_path = vim.json.decode(
-		vim.fn.system(
-			[[pnpm ls -g --long --json @vue/language-server | jq '.[0].dependencies."@vue/language-server".path']]
-		)
-	)
-	vim.lsp.config("vtsls", {
-		settings = {
-			vtsls = {
-				tsserver = {
-					globalPlugins = {
-						{
-							name = "@vue/typescript-plugin",
-							location = vue_language_server_path,
-							languages = { "vue" },
-							configNamespace = "typescript",
+	vim.system({
+		"pnpm",
+		"ls",
+		"-g",
+		"--long",
+		"--json",
+		"@vue/language-server",
+	}, { text = true }, function(result)
+		if result.code ~= 0 then
+			return
+		end
+
+		local data = vim.json.decode(result.stdout)
+		local path = data[1].dependencies["@vue/language-server"].path
+
+		vim.schedule(function()
+			vim.lsp.config("vtsls", {
+				settings = {
+					vtsls = {
+						tsserver = {
+							globalPlugins = {
+								{
+									name = "@vue/typescript-plugin",
+									location = path,
+									languages = { "vue" },
+									configNamespace = "typescript",
+								},
+							},
 						},
 					},
 				},
-			},
-		},
-		filetypes = { "vue" },
-	})
+				filetypes = {
+					"typescript",
+					"javascript",
+					"javascriptreact",
+					"typescriptreact",
+					"vue",
+				},
+			})
 
-	vim.lsp.enable({ "vtsls", "vue" })
+			for _, client in ipairs(vim.lsp.get_clients({ name = "tsgo" })) do
+				local ns = vim.lsp.diagnostic.get_namespace(client.id)
+				vim.notify("Stopping tsgo LSP client: " .. ns)
+				vim.diagnostic.reset(ns)
+
+				vim.lsp.enable(client.name, false)
+				client:stop(true)
+			end
+
+			vim.lsp.enable({ "vtsls", "vue" })
+		end)
+	end)
 end, { desc = "Configure and start Vue LSP support" })
 
 require("fidget").setup({
@@ -427,70 +518,9 @@ require("fidget").setup({
 		window = { normal_hl = "Normal" },
 	},
 })
+-- }}}
 
--- Git
-require("neogit").setup({})
-vim.keymap.set("n", "<leader>gg", require("neogit").open, { desc = "Show Neogit UI" })
-
--- AI
-local copilot_filetypes = { ["*"] = false }
-for _, ft in ipairs(tsFiletypes) do
-	copilot_filetypes[ft] = true
-end
-require("copilot").setup({
-	suggestion = { enabled = true, auto_trigger = true },
-	panel = { enabled = false },
-	filetypes = copilot_filetypes,
-})
-require("sidekick").setup({
-	nes = { enabled = true },
-	cli = {
-		win = {
-			layout = "float",
-			float = { border = "rounded" },
-		},
-		mux = {
-			backend = "tmux",
-			enabled = false,
-		},
-		tools = {
-			pi = {
-				cmd = { "pi", "--no-session" },
-			},
-		},
-	},
-})
-vim.keymap.set({ "i", "n" }, "<tab>", function()
-	if require("sidekick").nes_jump_or_apply() then
-		return
-	end
-	if require("copilot.suggestion").is_visible() then
-		require("copilot.suggestion").accept_word()
-		return
-	end
-	return "<tab>"
-end, { expr = true, desc = "Go-to/Apply Copilot suggestion" })
-vim.keymap.set({ "i", "n" }, "<s-tab>", function()
-	if require("sidekick.nes").apply() then
-		return
-	end
-	if require("copilot.suggestion").is_visible() then
-		require("copilot.suggestion").accept()
-		return
-	end
-	return "<tab>"
-end, { expr = true, desc = "Apply Copilot suggestion" })
-vim.keymap.set({ "n", "t", "i", "x" }, "<c-.>", function()
-	require("sidekick.cli").focus({ name = "pi" })
-end, { desc = "Sidekick Focus" })
-vim.keymap.set("x", "<leader>av", function()
-	require("sidekick.cli").send({ msg = "{selection}" })
-end, { desc = "Send {selection}" })
-vim.keymap.set({ "x", "n" }, "<leader>ap", function()
-	require("sidekick.cli").send({ msg = "{position}" })
-end, { desc = "Send {position}" })
-
--- Telescope
+-- {{{ Setup: Telescope
 local telescope = require("telescope")
 local telescopeConfig = require("telescope.config")
 
@@ -551,9 +581,35 @@ vim.keymap.set("n", "<leader>fg", tb.live_grep, { desc = "Grep in project" })
 vim.keymap.set("n", "<leader>fh", tb.help_tags, { desc = "Search help tags" })
 vim.keymap.set("n", "<leader>fr", tb.oldfiles, { desc = "Recent files" })
 vim.keymap.set("n", "<leader>fc", tb.commands, { desc = "Find commands" })
+-- }}}
 
--- Navigation / Formatting / Mini
--- Navigation
+-- {{{ Setup: Completion
+require("blink.cmp").setup({
+	completion = {
+		list = { selection = { auto_insert = false } },
+	},
+	keymap = {
+		preset = "none",
+
+		["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
+		["<C-e>"] = { "hide", "fallback" },
+		["<C-CR>"] = { "select_and_accept", "fallback" },
+
+		["<C-Up>"] = { "select_prev", "fallback" },
+		["<C-Down>"] = { "select_next", "fallback" },
+
+		["<C-u>"] = { "scroll_documentation_up", "fallback" },
+		["<C-d>"] = { "scroll_documentation_down", "fallback" },
+
+		["<Tab>"] = { "snippet_forward", "fallback" },
+		["<S-Tab>"] = { "snippet_backward", "fallback" },
+
+		["<C-k>"] = { "show_signature", "hide_signature", "fallback" },
+	},
+})
+-- }}}
+
+-- {{{ Setup: Navigation
 require("nvim-tree").setup({
 	update_focused_file = {
 		enable = true,
@@ -565,8 +621,8 @@ require("nvim-tree").setup({
 			open_win_config = function()
 				local screen_w = vim.opt.columns:get()
 				local screen_h = vim.opt.lines:get() - vim.opt.cmdheight:get()
-				local window_w = math.floor(screen_w * 0.5)
-				local window_h = math.floor(screen_h * 0.5)
+				local window_w = math.floor(screen_w * 0.7)
+				local window_h = math.floor(screen_h * 0.8)
 				local center_x = math.floor((screen_w - window_w) / 2)
 				local center_y = math.floor((screen_h - window_h) / 2)
 				return {
@@ -584,6 +640,112 @@ require("nvim-tree").setup({
 vim.keymap.set("n", "<leader>e", function()
 	require("nvim-tree.api").tree.toggle({ focus = true })
 end, { desc = "Toggle file explorer" })
+
+require("bufferline").setup({
+	options = {
+		diagnostics = "nvim_lsp",
+		diagnostics_indicator = function(_, _, diag)
+			local icons = { error = " ", warning = " ", info = " " }
+			local result = {}
+			for name, count in pairs(diag) do
+				if icons[name] and count > 0 then
+					table.insert(result, icons[name] .. count)
+				end
+			end
+			return table.concat(result, " ")
+		end,
+		highlights = {
+			fill = {
+				bg = { attribute = "bg", highlight = "WildMenu" },
+			},
+		},
+		indicator = { style = "underline" },
+	},
+})
+-- }}}
+
+-- {{{ Setup: Search / Mini / Formatting
+-- Flash search
+require("flash").setup()
+vim.keymap.set({ "n", "x", "o" }, "s", function()
+	require("flash").jump()
+end, { desc = "Flash" })
+vim.keymap.set({ "n", "x", "o" }, "S", function()
+	require("flash").treesitter()
+end, { desc = "Flash Treesitter" })
+vim.keymap.set("o", "r", function()
+	require("flash").remote()
+end, { desc = "Remote Flash" })
+vim.keymap.set({ "o", "x" }, "R", function()
+	require("flash").treesitter_search()
+end, { desc = "Treesitter Search" })
+vim.keymap.set("c", "<c-s>", function()
+	require("flash").toggle()
+end, { desc = "Toggle Flash Search" })
+-- Key search
+require("which-key").setup({ preset = "modern" })
+vim.keymap.set("n", "<leader>?", function()
+	require("which-key").show({ global = false })
+end, { desc = "Buffer keymaps" })
+
+-- Mini
+require("mini.animate").setup({
+	scroll = { enable = false },
+})
+
+require("mini.basics").setup({
+	options = {
+		basic = true,
+		extra_ui = false,
+		win_borders = "rounded",
+	},
+	mappings = {
+		option_toggle_prefix = "",
+	},
+})
+
+require("mini.bufremove").setup()
+vim.keymap.set("n", "<leader>bd", function()
+	require("mini.bufremove").delete()
+end, { desc = "Delete buffer" })
+vim.keymap.set("n", "<leader>bD", function()
+	require("mini.bufremove").wipe()
+end, { desc = "Wipe buffer" })
+
+-- vim.api.nvim_set_hl(0, "MiniCursorwordCurrent", {})
+-- vim.api.nvim_set_hl(0, "MiniCursorword", {
+-- 	fg = "#ffffff",
+-- 	bg = "#444444",
+-- 	underline = true,
+-- })
+require("mini.cursorword").setup()
+require("mini.icons").setup()
+
+local indent_forbidden_ft = {
+	sidekick_terminal = true,
+	NvimTree = true,
+}
+require("mini.indentscope").setup({
+	draw = {
+		predicate = function(scope)
+			return not indent_forbidden_ft[vim.bo[scope.buf_id].filetype] and not scope.body.is_incomplete
+		end,
+	},
+})
+require("mini.notify").setup({
+	lsp_progress = { enable = false },
+})
+require("mini.statusline").setup()
+require("mini.surround").setup({
+	mappings = {
+		add = "<leader>sa",
+		delete = "<leader>sd",
+		find = "<leader>sf",
+		find_left = "<leader>sF",
+		highlight = "<leader>sh",
+		replace = "<leader>sc",
+	},
+})
 
 -- Formatting
 require("conform").setup({
@@ -605,6 +767,8 @@ require("conform").setup({
 		},
 	},
 	formatters_by_ft = {
+		c = { "clang-format" },
+		cpp = { "clang-format" },
 		javascript = { "oxfmt" },
 		javascriptreact = { "oxfmt" },
 		json = { "oxfmt" },
@@ -619,120 +783,128 @@ require("conform").setup({
 	},
 })
 vim.o.formatexpr = "v:lua.require('conform').formatexpr()"
+-- }}}
 
--- Flash jumps
-require("flash").setup()
-vim.keymap.set({ "n", "x", "o" }, "s", function()
-	require("flash").jump()
-end, { desc = "Flash" })
-vim.keymap.set({ "n", "x", "o" }, "S", function()
-	require("flash").treesitter()
-end, { desc = "Flash Treesitter" })
-vim.keymap.set("o", "r", function()
-	require("flash").remote()
-end, { desc = "Remote Flash" })
-vim.keymap.set({ "o", "x" }, "R", function()
-	require("flash").treesitter_search()
-end, { desc = "Treesitter Search" })
-vim.keymap.set("c", "<c-s>", function()
-	require("flash").toggle()
-end, { desc = "Toggle Flash Search" })
-
--- Mini
-require("mini.animate").setup({
-	scroll = { enable = false },
-})
-
-local gen_spec = require("mini.ai").gen_spec
-require("mini.ai").setup({
-	mappings = {
-		around_next = "aN",
-		inside_next = "iN",
-		around_last = "aL",
-		inside_last = "iL",
-	},
-	custom_textobjects = {
-		P = gen_spec.treesitter({ a = "@parameter.outer", i = "@parameter.inner" }),
-		F = gen_spec.treesitter({ a = "@function.outer", i = "@function.inner" }),
-	},
-})
-require("mini.basics").setup({
-	options = {
-		basic = true,
-		extra_ui = false,
-		win_borders = "rounded",
-	},
-	mappings = {
-		option_toggle_prefix = "",
-	},
-})
-require("mini.bufremove").setup()
-require("mini.bracketed").setup()
-require("mini.completion").setup({
-	window = {
-		info = { border = "rounded" },
-		signature = { border = "rounded" },
-	},
-})
-
--- vim.api.nvim_set_hl(0, "MiniCursorwordCurrent", {})
--- vim.api.nvim_set_hl(0, "MiniCursorword", {
--- 	fg = "#ffffff",
--- 	bg = "#444444",
--- 	underline = true,
--- })
-require("mini.cursorword").setup()
-
-require("mini.icons").setup()
-
-local indent_forbidden_ft = {
-	sidekick_terminal = true,
-	NvimTree = true,
-}
-require("mini.indentscope").setup({
-	draw = {
-		predicate = function(scope)
-			return not indent_forbidden_ft[vim.bo[scope.buf_id].filetype] and not scope.body.is_incomplete
-		end,
-	},
-})
-require("mini.notify").setup({
-	lsp_progress = { enable = false },
-})
-require("mini.pairs").setup()
-require("mini.statusline").setup()
-require("mini.surround").setup({
-	mappings = {
-		add = "<leader>sa",
-		delete = "<leader>sd",
-		find = "<leader>sf",
-		find_left = "<leader>sF",
-		highlight = "<leader>sh",
-		replace = "<leader>sc",
-	},
-})
-require("mini.tabline").setup()
-
-vim.keymap.set("n", "<leader>bd", function()
-	require("mini.bufremove").delete()
-end, { desc = "Delete buffer" })
-vim.keymap.set("n", "<leader>bD", function()
-	require("mini.bufremove").wipe()
-end, { desc = "Wipe buffer" })
-
--- Which-key for key mappings
-require("which-key").setup({ preset = "modern" })
-vim.keymap.set("n", "<leader>?", function()
-	require("which-key").show({ global = false })
-end, { desc = "Buffer keymaps" })
-
--- Debugging
+-- {{{ Setup: Debugging
 require("dap-python").setup("uv")
 require("nvim-dap-virtual-text").setup({})
 require("dap-view").setup()
 vim.fn.sign_define("DapBreakpoint", { text = " ", texthl = "DiagnosticSignError", linehl = "", numhl = "" })
+-- }}}
 
--- Session and Shada
+-- {{{ Setup: AI
+local copilot_filetypes = { ["*"] = false }
+for _, ft in ipairs(tsFiletypes) do
+	copilot_filetypes[ft] = true
+end
+require("copilot").setup({
+	suggestion = { enabled = true, auto_trigger = true },
+	panel = { enabled = false },
+	filetypes = copilot_filetypes,
+})
+
+local Session = require("sidekick.cli.session")
+---@diagnostic disable-next-line: duplicate-set-field
+Session.sid = function(opts)
+	local tool = assert(opts and opts.tool, "missing tool")
+	local cwd = Session.cwd(opts)
+	return ("%s-%s"):format(tool, vim.fn.fnamemodify(cwd, ":t"))
+end
+
+require("sidekick").setup({
+	nes = { enabled = true },
+	cli = {
+		win = {
+			layout = "float",
+			float = { border = "rounded" },
+		},
+		mux = {
+			backend = "tmux",
+			enabled = true,
+		},
+		tools = {
+			pi = {
+				cmd = { "pi", "--no-session", "--no-extensions" },
+			},
+		},
+	},
+})
+
+vim.keymap.set({ "i", "n" }, "<tab>", function()
+	if not require("sidekick").nes_jump_or_apply() then
+		return "<tab>"
+	end
+end, { expr = true, desc = "Go-to/Apply Copilot suggestion" })
+
+local function copilot_suggestion_at_cursor()
+	local cursor = vim.api.nvim_win_get_cursor(0)
+	local mark = vim.api.nvim_buf_get_extmark_by_id(
+		0,
+		vim.api.nvim_create_namespace("copilot.suggestion"),
+		1,
+		{ details = false }
+	)
+	return mark[1] == cursor[1] - 1 and mark[2] == cursor[2]
+end
+local function copilot_suggestion_accept()
+	if require("copilot.suggestion").is_visible() and copilot_suggestion_at_cursor() then
+		require("copilot.suggestion").accept()
+		return true
+	end
+	return false
+end
+
+vim.keymap.set("i", "<kEnd>", function()
+	if not copilot_suggestion_accept() then
+		return "<kEnd>"
+	end
+end, { expr = true, desc = "Apply Copilot suggestion" })
+vim.keymap.set("i", "<End>", function()
+	if not copilot_suggestion_accept() then
+		return "<End>"
+	end
+end, { expr = true, desc = "Apply Copilot suggestion line" })
+vim.keymap.set("i", "<Right>", function()
+	if require("copilot.suggestion").is_visible() and copilot_suggestion_at_cursor() then
+		require("copilot.suggestion").accept(function(suggestion)
+			local character = vim.api.nvim_win_get_cursor(0)[2]
+			local next_character = string.sub(suggestion.text, character + 1, character + 1)
+			if next_character ~= "" then
+				suggestion.partial_text = string.sub(suggestion.text, 1, character + 1)
+				suggestion.range["end"].line = suggestion.range["start"].line
+				suggestion.range["end"].character = character + 1
+			end
+			return suggestion
+		end)
+		return
+	end
+	return "<Right>"
+end, { expr = true, desc = "Apply one Copilot suggestion character" })
+vim.keymap.set("i", "<C-Right>", function()
+	if require("copilot.suggestion").is_visible() and copilot_suggestion_at_cursor() then
+		require("copilot.suggestion").accept_word()
+		return
+	end
+	return "<C-Right>"
+end, { expr = true, desc = "Apply one Copilot suggestion word" })
+
+vim.keymap.set({ "n", "t", "i", "x" }, "<C-.>", function()
+	require("sidekick.cli").focus()
+end, { desc = "Sidekick Focus" })
+vim.keymap.set("x", "<leader>av", function()
+	require("sidekick.cli").send({ msg = "{selection}" })
+end, { desc = "Send {selection}" })
+vim.keymap.set({ "x", "n" }, "<leader>ap", function()
+	require("sidekick.cli").send({ msg = "{position}" })
+end, { desc = "Send {position}" })
+-- }}}
+
+-- {{{ Setup: Git
+require("neogit").setup({})
+vim.keymap.set("n", "<leader>gg", require("neogit").open, { desc = "Show Neogit UI" })
+-- }}}
+
+-- {{{ Session and Shada
 local function get_wip_dir()
 	local state_dir = vim.fn.stdpath("state")
 	local cwd = vim.fn.getcwd():gsub("/", "-")
@@ -776,3 +948,4 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 		vim.cmd("mksession! " .. vim.fn.fnameescape(session_file))
 	end,
 })
+-- }}}

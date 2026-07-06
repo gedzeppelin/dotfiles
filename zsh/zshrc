@@ -6,12 +6,7 @@ export ZSH_THEME="custom"
 # How often to auto-update (in days).
 zstyle ':omz:update' frequency 7
 
-# Uncomment the following line if pasting URLs and other text is messed up.
 # DISABLE_MAGIC_FUNCTIONS="true"
-
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
 # DISABLE_UNTRACKED_FILES_DIRTY="true"
 
 # Autosuggestions configuration
@@ -37,14 +32,12 @@ eval "$(atuin init zsh)"
 # Node manager
 eval "$(fnm env --use-on-cd --shell zsh)"
 
+# pnpm somewhat god
+export PNPM_HOME="$HOME/.pnpm"
+
 # Configuration
 export XDG_CONFIG_HOME="$HOME/.config"
 export EDITOR="nvim"
-export HISTSIZE=2500
-export ARCHFLAGS="-arch x86_64"
-
-# pnpm
-export PNPM_HOME="$HOME/.pnpm"
 
 # Path
 path+=$PNPM_HOME/bin
