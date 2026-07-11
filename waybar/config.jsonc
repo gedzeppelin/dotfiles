@@ -23,7 +23,6 @@
         //"memory",
         //"temperature",
         "backlight",
-        "custom/razer",
         "battery",
         //"keyboard-state",
         "sway/language",
