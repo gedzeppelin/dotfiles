@@ -76,29 +76,52 @@ vim.api.nvim_create_autocmd("FileType", {
 -- Pack hooks
 vim.api.nvim_create_autocmd("PackChanged", {
 	callback = function(ev)
-		if ev.data.kind ~= "install" or ev.data.kind ~= "update" then
+		if ev.data.kind ~= "install" and ev.data.kind ~= "update" then
 			return
 		end
 		if ev.data.spec.name ~= "telescope-fzf-native.nvim" then
-			vim.system(
-				{ "cmake", "-S.", "-Bbuild", "-DCMAKE_BUILD_TYPE=Release" },
-				{ cwd = ev.data.path },
-				function(obj)
-					if obj.code ~= 0 then
-						vim.notify("cmake --build failed for telescope-fzf-native.nvim")
-					else
-						vim.system(
-							{ "cmake", "--build", "build", "--config", "Release", "--target", "install" },
-							{ cwd = ev.data.path }
-						)
-					end
-				end
-			)
+			vim.notify("Running cmake build for " .. ev.data.spec.name)
+			vim.system({
+				"bash",
+				"-c",
+				"cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release --target install",
+			}, { cwd = ev.data.path }, function(obj)
+				vim.notify("cmake build for " .. ev.data.spec.name .. obj.code == 0 and " succeeded" or " failed")
+			end)
 		end
-		if ev.data.spec.name == "blink.cmp" then
+		if ev.data.spec.name == "blink.cmp" or ev.data.spec.name == "blink.lib" then
+			vim.notify("Running build for " .. ev.data.spec.name)
 			require("blink.cmp").build():pwait()
+			vim.notify("Build for " .. ev.data.spec.name .. " completed")
 		end
 	end,
+})
+-- Copy lines
+vim.keymap.set("x", "<leader>cp", function()
+	local path = vim.api.nvim_buf_get_name(0)
+
+	if path == "" then
+		vim.notify("Current buffer has no file path", vim.log.levels.WARN)
+		return
+	end
+
+	-- Path relative to Neovim's current working directory.
+	path = vim.fn.fnamemodify(path, ":.")
+
+	-- In Visual mode, "v" is the selection anchor and "." is the cursor.
+	local start_line = vim.fn.getpos("v")[2]
+	local end_line = vim.fn.getpos(".")[2]
+
+	if start_line > end_line then
+		start_line, end_line = end_line, start_line
+	end
+
+	local location = string.format("%s lines %d:%d", path, start_line, end_line)
+
+	vim.fn.setreg("+", location)
+	vim.notify("Copied: " .. path)
+end, {
+	desc = "Copy relative path and selected line range",
 })
 -- }}}
 
@@ -210,14 +233,13 @@ local tsFiletypes = {
 	"dockerfile",
 	"http",
 	"javascript",
-	"javascriptreact",
 	"json",
 	"lua",
 	"markdown",
 	"python",
+	"rust",
 	"sql",
 	"typescript",
-	"typescriptreact",
 	"vue",
 	"yaml",
 }
@@ -227,9 +249,7 @@ require("nvim-treesitter-textobjects").setup({
 })
 
 require("tree-sitter-manager").setup({
-	ensure_installed = vim.tbl_filter(function(ft)
-		return not string.match(ft, "react")
-	end, tsFiletypes),
+	ensure_installed = tsFiletypes,
 	highlight = false,
 })
 
@@ -258,11 +278,11 @@ end
 vim.api.nvim_create_autocmd("FileType", {
 	group = vim.api.nvim_create_augroup("treesitter-init", { clear = true }),
 	desc = "Initiate Treesitter for supported filetypes",
-	pattern = tsFiletypes,
+	pattern = vim.tbl_extend("force", tsFiletypes, { "sh", "javascriptreact", "typescriptreact" }),
 	callback = function()
 		vim.treesitter.start()
-		vim.opt_local.foldenable = true
-		vim.opt_local.foldlevel = 99
+		vim.opt.foldenable = true
+		vim.opt.foldlevel = 99
 		vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
 		vim.wo[0][0].foldmethod = "expr"
 	end,
@@ -366,12 +386,14 @@ vim.lsp.config("ty", {
 })
 
 vim.lsp.enable({
+	"bashls",
 	"clangd",
 	"codebook",
 	"jsonls",
 	"lua_ls",
 	"oxlint",
 	"ruff",
+	"rust_analyzer",
 	"tsgo",
 	"ty",
 })
@@ -457,7 +479,7 @@ vim.api.nvim_create_autocmd("LspDetach", {
 })
 
 -- Vue LSP setup
-vim.api.nvim_create_user_command("VueStart", function()
+vim.api.nvim_create_user_command("LspVueInit", function()
 	vim.system({
 		"pnpm",
 		"ls",
@@ -467,6 +489,7 @@ vim.api.nvim_create_user_command("VueStart", function()
 		"@vue/language-server",
 	}, { text = true }, function(result)
 		if result.code ~= 0 then
+			vim.notify("Failed to find @vue/language-server globally", vim.log.levels.ERROR)
 			return
 		end
 
@@ -549,6 +572,11 @@ end
 
 telescope.setup({
 	defaults = {
+		mappings = {
+			i = {
+				["<Esc>"] = require("telescope.actions").close,
+			},
+		},
 		layout_config = {
 			horizontal = {
 				width = 0.9,
@@ -611,6 +639,20 @@ require("blink.cmp").setup({
 
 -- {{{ Setup: Navigation
 require("nvim-tree").setup({
+	on_attach = function(bufnr)
+		local api = require("nvim-tree.api")
+
+		-- Keep nvim-tree's default mappings
+		api.map.on_attach.default(bufnr)
+
+		-- Close the floating explorer with Esc
+		vim.keymap.set("n", "<Esc>", api.tree.close, {
+			buffer = bufnr,
+			noremap = true,
+			silent = true,
+			nowait = true,
+		})
+	end,
 	update_focused_file = {
 		enable = true,
 		update_root = nil,
@@ -767,6 +809,7 @@ require("conform").setup({
 		},
 	},
 	formatters_by_ft = {
+		bash = { "beautysh" },
 		c = { "clang-format" },
 		cpp = { "clang-format" },
 		javascript = { "oxfmt" },
@@ -775,6 +818,7 @@ require("conform").setup({
 		jsonc = { "oxfmt" },
 		lua = { "stylua" },
 		python = { "ruff_format", "ruff_organize_imports" },
+		sh = { "beautysh" },
 		toml = { "taplo" },
 		typescript = { "oxfmt" },
 		typescriptreact = { "oxfmt" },
@@ -786,10 +830,12 @@ vim.o.formatexpr = "v:lua.require('conform').formatexpr()"
 -- }}}
 
 -- {{{ Setup: Debugging
-require("dap-python").setup("uv")
-require("nvim-dap-virtual-text").setup({})
-require("dap-view").setup()
-vim.fn.sign_define("DapBreakpoint", { text = " ", texthl = "DiagnosticSignError", linehl = "", numhl = "" })
+vim.api.nvim_create_user_command("DebugInit", function()
+	require("dap-python").setup("uv")
+	require("nvim-dap-virtual-text").setup({})
+	require("dap-view").setup()
+	vim.fn.sign_define("DapBreakpoint", { text = " ", texthl = "DiagnosticSignError", linehl = "", numhl = "" })
+end, { desc = "Set up debugging environment" })
 -- }}}
 
 -- {{{ Setup: AI
@@ -820,11 +866,11 @@ require("sidekick").setup({
 		},
 		mux = {
 			backend = "tmux",
-			enabled = true,
+			enabled = false,
 		},
 		tools = {
 			pi = {
-				cmd = { "pi", "--no-session", "--no-extensions" },
+				cmd = { "pi", "--no-session" },
 			},
 		},
 	},
