@@ -20,6 +20,11 @@ plugins=(git aws zsh-autosuggestions)
 # Oh my zsh
 source $ZSH/oh-my-zsh.sh
 
+# Configuration
+export XDG_CONFIG_HOME="$HOME/.config"
+export EDITOR="nvim"
+export TAILSCALE_EXIT_NODE="us-mia-wg-003.mullvad.ts.net."
+
 # fzf god
 # source <(fzf --zsh)
 
@@ -29,18 +34,15 @@ HISTSIZE=0
 SAVEHIST=0
 eval "$(atuin init zsh)"
 
-# Node manager
+# Node
 eval "$(fnm env --use-on-cd --shell zsh)"
-
-# pnpm somewhat god
 export PNPM_HOME="$HOME/.pnpm"
 
-# Configuration
-export XDG_CONFIG_HOME="$HOME/.config"
-export EDITOR="nvim"
+# herdr
+eval "$(herdr completions zsh)"
 
 # Path
-path+=$PNPM_HOME/bin
 path+=$HOME/.local/bin
+path+=$HOME/.pnpm/bin
 path+=$HOME/.cargo/bin
 path+=$HOME/go/bin

@@ -11,20 +11,20 @@ set $right l
 
 ### output 
 output eDP-1 resolution 2560x1600 scale 1.6
-output * bg ~/bg.png fill
+output * bg ~/background.jpg fill
 output * adaptive_sync on
 
 ### visuals
 default_border pixel 2
-default_floating_border pixel 2
+# default_floating_border pixel 2
 # for_window [class="^.*"] border pixel 2
-# hide_edge_borders smart
+hide_edge_borders smart
 
 gaps inner 4
 gaps outer 1
 gaps top 1
 gaps bottom 1
-# smart_gaps on
+smart_gaps on
 
 client.focused           #9aa5ce #16161d #c0caf5 #9aa5ce   #9aa5ce
 client.focused_inactive  #16161d #16161d #c0caf5 #16161d   #16161d
@@ -33,6 +33,7 @@ client.unfocused         #16161d #16161d #c0caf5 #16161d   #16161d
 for_window [app_id="^(?:chromium|google-chrome)$" title="^(?:Open|Save) File$"] floating enable, resize set 800 600
 for_window [app_id="code" title="^(?:Open|Select) Folder$"] floating enable, resize set 800 600
 for_window [app_id="code" title="Save As"] floating enable, resize set 800 600
+for_window [app_id="llm_rewriter"] floating enable, resize set 800 600
 
 ### Input configuration
 input "1:1:AT_Translated_Set_2_keyboard" {
@@ -73,9 +74,12 @@ input "5426:193:Razer_Razer_Viper_V3_Pro" {
     # Terminal
     bindsym $mod+t exec kitty
     # Browser
-    bindsym $mod+c exec chromium
+    # bindsym $mod+c exec chromium
     # Launcher
     bindsym $mod+space exec tofi-drun | xargs swaymsg exec -- 
+
+    bindsym $mod+p exec /home/gedy/code/cpp/llm-rewriter/build/llm-rewriter --input primary --output clipboard
+    bindsym $mod+c exec /home/gedy/code/cpp/llm-rewriter/build/llm-rewriter --input clipboard --output clipboard
 
     # Kill focused window
     bindsym $mod+q kill
@@ -207,6 +211,9 @@ input "5426:193:Razer_Razer_Viper_V3_Pro" {
     bindsym Alt+Print exec grim -g "$(slurp)" - | wl-copy
     bindsym Shift+Print exec grim -g "$(slurp)" - > ~/downloads/$(date -Iseconds)_screenshot.png
     bindsym Print exec grim - > ~/downloads/$(date -Iseconds)_screenshot.png
+    # AI shit
+    bindsym $mod+m exec grim -g "$(slurp)" - | llm "describe this image" -a - | wl-copy
+    bindsym $mod+Shift+m exec llm "describe this image" -a $(wl-paste) | wl-copy
 #
 # Resizing containers:
 #
@@ -244,7 +251,6 @@ exec swayidle -w \
     before-sleep 'swaylock -f -c 000000'
 
 exec_always {
-    gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
     gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
     gsettings set org.gnome.desktop.interface font-name 'Adwaita Sans 11'
 }

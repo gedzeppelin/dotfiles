@@ -2,12 +2,10 @@
 
 My personal Linux dotfiles.
 
-This repo is the source of truth for my configs. The included install script copies each config into its default location under `~/.config` using `cp -i`, so it asks before overwriting existing files.
-
 ## Install everything
 
 ```sh
-./install.sh
+./install.py install
 ```
 
 ## Install specific configs
@@ -15,16 +13,16 @@ This repo is the source of truth for my configs. The included install script cop
 Pass one or more names as arguments:
 
 ```sh
-./install.sh nvim kitty waybar
+./install.py install nvim kitty waybar
 ```
 
-Available names:
+## Preview, list, or check drift / differences
 
-- `atuin`
-- `btop`
-- `kitty`
-- `nvim`
-- `sway`
-- `tofi`
-- `waybar`
-- `yazi`
+```sh
+./install.py install --dry-run
+./install.py list
+./install.py check
+./install.py diff
+```
+
+`check` reports files that only exist in the repo, only exist on the system, or differ between both locations. Positional arguments are always target names, so future config names cannot conflict with script actions.
