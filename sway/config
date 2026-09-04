@@ -1,23 +1,27 @@
+# {{{ General
 xwayland disable
 font pango:Ioskeley Mono 11
 
-### mod key
+# mod key
 set $mod Mod4
-## vim keys
+# vim keys
 set $left h
 set $down j
 set $up k
 set $right l
 
-### output 
+exec_always {
+    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+    gsettings set org.gnome.desktop.interface font-name 'Adwaita Sans 11'
+}
+# }}}
+
+# {{{ Output and looks
 output eDP-1 resolution 2560x1600 scale 1.6
-output * bg ~/background.jpg fill
+output * bg ~/wallpaper.jpg fill
 output * adaptive_sync on
 
-### visuals
 default_border pixel 2
-# default_floating_border pixel 2
-# for_window [class="^.*"] border pixel 2
 hide_edge_borders smart
 
 gaps inner 4
@@ -30,12 +34,14 @@ client.focused           #9aa5ce #16161d #c0caf5 #9aa5ce   #9aa5ce
 client.focused_inactive  #16161d #16161d #c0caf5 #16161d   #16161d
 client.unfocused         #16161d #16161d #c0caf5 #16161d   #16161d
 
+for_window [app_id="chromium"] shortcuts_inhibitor disable
 for_window [app_id="^(?:chromium|google-chrome)$" title="^(?:Open|Save) File$"] floating enable, resize set 800 600
 for_window [app_id="code" title="^(?:Open|Select) Folder$"] floating enable, resize set 800 600
 for_window [app_id="code" title="Save As"] floating enable, resize set 800 600
 for_window [app_id="llm_rewriter"] floating enable, resize set 800 600
+# }}}
 
-### Input configuration
+# {{{ Input
 input "1:1:AT_Translated_Set_2_keyboard" {
     xkb_layout "latam"
 }
@@ -66,11 +72,9 @@ input "5426:192:Razer_Viper_V3_Pro" {
 input "5426:193:Razer_Razer_Viper_V3_Pro" {
     scroll_factor 1.5
 }
+# }}}
 
-### Key bindings
-#
-# Basics:
-#
+# {{{ Keys: basics
     # Terminal
     bindsym $mod+t exec kitty
     # Browser
@@ -96,9 +100,9 @@ input "5426:193:Razer_Razer_Viper_V3_Pro" {
 
     # Exit sway (logs you out of your Wayland session)
     bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
-#
-# Moving around:
-#
+# }}}
+
+# {{{ Keys :moving around
     # Move your focus around
     bindsym $mod+$left focus left
     bindsym $mod+$down focus down
@@ -120,9 +124,9 @@ input "5426:193:Razer_Razer_Viper_V3_Pro" {
     bindsym $mod+Shift+Down move down
     bindsym $mod+Shift+Up move up
     bindsym $mod+Shift+Right move right
-#
-# Workspaces:
-#
+# }}}
+
+# {{{ Keys: workspaces
     # Switch to workspace
     bindsym $mod+1 workspace number 1
     bindsym $mod+2 workspace number 2
@@ -145,11 +149,9 @@ input "5426:193:Razer_Razer_Viper_V3_Pro" {
     bindsym $mod+Shift+8 move container to workspace number 8
     bindsym $mod+Shift+9 move container to workspace number 9
     bindsym $mod+Shift+0 move container to workspace number 10
-    # Note: workspaces can have any name you want, not just numbers.
-    # We just use 1-10 as the default.
-#
-# Layout stuff:
-#
+# }}}
+
+# {{{ Keys: layout
     # You can "split" the current object of your focus with
     # $mod+b or $mod+v, for horizontal and vertical splits
     # respectively.
@@ -172,9 +174,9 @@ input "5426:193:Razer_Razer_Viper_V3_Pro" {
 
     # Move focus to the parent container
     bindsym $mod+a focus parent
-#
-# Scratchpad:
-#
+# }}}
+
+# {{{ Keys: scratchpad
     # Sway has a "scratchpad", which is a bag of holding for windows.
     # You can send windows there and get them back later.
 
@@ -184,9 +186,9 @@ input "5426:193:Razer_Razer_Viper_V3_Pro" {
     # Show the next scratchpad window or hide the focused scratchpad window.
     # If there are multiple scratchpad windows, this command cycles through them.
     bindsym $mod+minus scratchpad show
-#
-# fn keys
-#
+# }}}
+    
+# {{{ Keys: function keys
     # Extra keys on the keyboard
     bindsym XF86AudioMute exec wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
     bindsym XF86AudioLowerVolume exec wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
@@ -211,12 +213,17 @@ input "5426:193:Razer_Razer_Viper_V3_Pro" {
     bindsym Alt+Print exec grim -g "$(slurp)" - | wl-copy
     bindsym Shift+Print exec grim -g "$(slurp)" - > ~/downloads/$(date -Iseconds)_screenshot.png
     bindsym Print exec grim - > ~/downloads/$(date -Iseconds)_screenshot.png
-    # AI shit
-    bindsym $mod+m exec grim -g "$(slurp)" - | llm "describe this image" -a - | wl-copy
-    bindsym $mod+Shift+m exec llm "describe this image" -a $(wl-paste) | wl-copy
-#
-# Resizing containers:
-#
+# }}}
+
+# {{{ Keys: experiments
+    set $wl-eyes ~/code/rust/wl-eyes/target/debug/wl-eyes
+    set $wl-env ~/code/rust/wl-eyes/.env
+    bindsym $mod+m exec $wl-eyes process --debug --experimental --env $wl-env --image-output /tmp/region.png > /tmp/wl-eyes.log 2>&1
+    bindsym $mod+g exec $wl-eyes anchor next
+    bindsym $mod+x exec $wl-eyes close
+# }}}
+
+# {{{ Keys: resize
 mode "resize" {
     # left will shrink the containers width
     # right will grow the containers width
@@ -237,22 +244,20 @@ mode "resize" {
     bindsym Escape mode "default"
 }
 bindsym $mod+r mode "resize"
+# }}}
 
-# Status Bar:
+# {{{ Status bar
 bar {
     swaybar_command waybar
     position top
 }
+# }}}
 
-# Idle configuration
+# {{{ Idle
 exec swayidle -w \
     lock 'swaylock -f -o -c 000000' \
     timeout 300 'swaylock -f -o -c 000000' \
     before-sleep 'swaylock -f -c 000000'
-
-exec_always {
-    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-    gsettings set org.gnome.desktop.interface font-name 'Adwaita Sans 11'
-}
+# }}}
 
 include /etc/sway/config.d/*

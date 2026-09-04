@@ -123,6 +123,17 @@ vim.keymap.set("x", "<leader>cp", function()
 end, {
 	desc = "Copy relative path and selected line range",
 })
+-- Sort words
+vim.api.nvim_create_user_command("SortWords", function()
+	local line = vim.api.nvim_get_current_line()
+
+	local indent, content = line:match("^(%s*)(.*)$")
+	local items = vim.split(content, "%s+", { trimempty = true })
+
+	table.sort(items)
+
+	vim.api.nvim_set_current_line(indent .. table.concat(items, " "))
+end, {})
 -- }}}
 
 -- {{{ Plugin management
@@ -226,7 +237,7 @@ vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#a9b1d6", italic = true })
 -- }}}
 
 -- {{{ Setup: Treesitter
-local tsFiletypes = {
+local treesitter_parsers = {
 	"bash",
 	"c",
 	"cpp",
@@ -243,13 +254,19 @@ local tsFiletypes = {
 	"vue",
 	"yaml",
 }
+local treesitter_filetypes = vim.tbl_extend("force", treesitter_parsers, {
+	"javascriptreact",
+	"sh",
+	"typescriptreact",
+	"zsh",
+})
 
 require("nvim-treesitter-textobjects").setup({
 	select = { lookahead = true },
 })
 
 require("tree-sitter-manager").setup({
-	ensure_installed = tsFiletypes,
+	ensure_installed = treesitter_parsers,
 	highlight = false,
 })
 
@@ -278,7 +295,7 @@ end
 vim.api.nvim_create_autocmd("FileType", {
 	group = vim.api.nvim_create_augroup("treesitter-init", { clear = true }),
 	desc = "Initiate Treesitter for supported filetypes",
-	pattern = vim.tbl_extend("force", tsFiletypes, { "sh", "javascriptreact", "typescriptreact" }),
+	pattern = treesitter_filetypes,
 	callback = function()
 		vim.treesitter.start()
 		vim.opt.foldenable = true
@@ -326,7 +343,7 @@ vim.diagnostic.config({
 vim.lsp.config("codebook", {
 	filetypes = vim.tbl_filter(function(ft)
 		return not string.match(ft, "markdown")
-	end, tsFiletypes),
+	end, treesitter_parsers),
 	init_options = {
 		logLevel = "warn",
 		diagnosticSeverity = "hint",
@@ -818,7 +835,7 @@ require("conform").setup({
 		jsonc = { "oxfmt" },
 		lua = { "stylua" },
 		python = { "ruff_format", "ruff_organize_imports" },
-		sh = { "beautysh" },
+		sh = { "shfmt" },
 		toml = { "taplo" },
 		typescript = { "oxfmt" },
 		typescriptreact = { "oxfmt" },
@@ -840,7 +857,7 @@ end, { desc = "Set up debugging environment" })
 
 -- {{{ Setup: AI
 local copilot_filetypes = { ["*"] = false }
-for _, ft in ipairs(tsFiletypes) do
+for _, ft in ipairs(treesitter_filetypes) do
 	copilot_filetypes[ft] = true
 end
 require("copilot").setup({
